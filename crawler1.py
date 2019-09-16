@@ -2,7 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 import random
-driver = webdriver.Firefox()
+
 # =============================================================================
 # http://www.google.com/search?
 #   start=0
@@ -28,6 +28,7 @@ class Page:
         self.link  = link
         self.text = text
         self.score = 0
+        
         print("Pages links count:")
         print(len(self.links))
         
@@ -41,15 +42,16 @@ class Page:
         #del self.links
         self.links = temp_links
         
+
+            
         
-        
-class DriverHelper:
-    def __init__(self, driver):
-        self.driver = driver
-        
+class Diver:
+    def __init__(self):
+        self.driver = webdriver.Firefox()    
         self.starting_key = "Chmiel"
         self.visited_pages = []    
         self.depth = 10
+        self.clickable_elements = []
         
     def page_has_loaded(self):
         print("Checking if {} page is loaded.".format(self.driver.current_url))
@@ -63,18 +65,39 @@ class DriverHelper:
         current_depth = 0
         while(current_depth<=self.depth):
             self.step()
+          
             self.create_current_page()
+            #self.peek()
             current_depth=current_depth + 1
         self.close()
             
     def start(self):
         self.driver.get("http://www.google.com")
-        elem  = driver.find_element_by_name('q')
+        elem  = self.driver.find_element_by_name('q')
         elem.send_keys(self.starting_key)
         elem.send_keys(Keys.RETURN)
     
     def step(self):
         self.driver.get(self.get_link())
+        
+    def peek(self):
+      
+        
+        current_window = self.driver.current_window_handle
+        
+        self.clickable_elements[0].click()
+        
+        
+        
+        
+        self.driver.switch_to_window(current_window)
+        #(IWebElement) self.clickable_elements[0].
+        
+        
+        
+       # self.driver.switch_to_window(self, new WindowHandle(link))
+        #peek_data = 
+        
         
     def get_link(self):
         #url = self.visited_pages[len(sel)]
@@ -91,20 +114,22 @@ class DriverHelper:
         cont = True
         while(cont == True):
             time.sleep(2)
-            print("creating page :" + driver.current_url)
+            print("creating page :" + self.driver.current_url)
             try:
-                currentText = driver.page_source
+                currentText = self.driver.page_source
             except:
                 print("Wzial na klate exceptiona")
             else:
                 cont = False
             
-        rawLinks = driver.find_elements_by_xpath("//a[@href]")
+        self.clickable_elements = self.driver.find_elements_by_xpath("//a[@href]")
         links = []
-        for rawLink in rawLinks:
-            links.append(rawLink.get_attribute("href"))
-        page = Page(links,driver.current_url, currentText)
-        page.trim_links()
+        for element in self.clickable_elements:
+            links.append(element.get_attribute("href"))
+        page = Page(links, self.driver.current_url, currentText)
+        
+        
+        
         self.visited_pages.append(page);
         
         
@@ -119,8 +144,8 @@ class DriverHelper:
 # link = all_links[0]
 # =============================================================================
 
-driverHelper =  DriverHelper(driver)
-driverHelper.start_diving()
+diver =  Diver()
+diver.start_diving()
 # =============================================================================
 # driverHelper.start() #root czyli google
 # driverHelper.create_current_page() #tworzac strone dodajemy ja do historii
