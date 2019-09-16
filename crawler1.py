@@ -65,9 +65,8 @@ class Diver:
         current_depth = 0
         while(current_depth<=self.depth):
             self.step()
-          
             self.create_current_page()
-            #self.peek()
+
             current_depth=current_depth + 1
         self.close()
             
@@ -78,18 +77,19 @@ class Diver:
         elem.send_keys(Keys.RETURN)
     
     def step(self):
+        current_window = self.driver.current_window_handle   
         self.driver.get(self.get_link())
+        score = 0
+        score = len(self.driver.find_elements_by_xpath("//img")) - 13
+        
+        if score < 0:
+            self.driver.switch_to_window(current_window)
+        
+        #self.driver.get()
         
     def peek(self):
-      
-        
-        current_window = self.driver.current_window_handle
-        
+        current_window = self.driver.current_window_handle        
         self.clickable_elements[0].click()
-        
-        
-        
-        
         self.driver.switch_to_window(current_window)
         #(IWebElement) self.clickable_elements[0].
         
@@ -102,7 +102,12 @@ class Diver:
     def get_link(self):
         #url = self.visited_pages[len(sel)]
         #print(self.visited_pages[len(self.visited_pages)-1].links[0])
-        index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
+        index = -1
+        if(self.visited_pages[len(self.visited_pages)-1].links != 0):
+            index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
+        else:
+            self.visited_pages[len(self.visited_pages)-1].links.append(self.visited_pages[len(self.visited_pages)-2].link)
+            index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
         print("random index:"+str(index))
         print("random link:" + self.visited_pages[len(self.visited_pages)-1].links[index])
         return self.visited_pages[len(self.visited_pages)-1].links[index]
