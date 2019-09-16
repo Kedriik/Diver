@@ -23,8 +23,9 @@ driver = webdriver.Firefox()
 # =============================================================================
 
 class Page:
-    def __init__(self, links, text):
+    def __init__(self, links, link, text):
         self.links = links
+        self.link  = link
         self.text = text
         self.score = 0
         print("Pages links count:")
@@ -35,7 +36,7 @@ class Page:
         exclude = "google"
         temp_links = []
         for link in self.links:
-            if link.find(exclude) == -1 or len(link) > 0:
+            if link.find(exclude) == -1 and len(link) > 0:
                 temp_links.append(link);
         #del self.links
         self.links = temp_links
@@ -45,6 +46,7 @@ class Page:
 class DriverHelper:
     def __init__(self, driver):
         self.driver = driver
+        
         self.starting_key = "Chmiel"
         self.visited_pages = []    
         self.depth = 10
@@ -61,9 +63,8 @@ class DriverHelper:
         current_depth = 0
         while(current_depth<=self.depth):
             self.step()
-            #self.driver.refresh()
             self.create_current_page()
-            current_depth=current_depth+1
+            current_depth=current_depth + 1
         self.close()
             
     def start(self):
@@ -87,11 +88,10 @@ class DriverHelper:
         self.driver.close()
         
     def create_current_page(self):
-        
         cont = True
         while(cont == True):
             time.sleep(2)
-            print("ELO")
+            print("creating page :" + driver.current_url)
             try:
                 currentText = driver.page_source
             except:
@@ -103,7 +103,7 @@ class DriverHelper:
         links = []
         for rawLink in rawLinks:
             links.append(rawLink.get_attribute("href"))
-        page = Page(links, currentText)
+        page = Page(links,driver.current_url, currentText)
         page.trim_links()
         self.visited_pages.append(page);
         
