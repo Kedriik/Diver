@@ -21,6 +21,7 @@ import random
 # time.sleep(1);
 # elem.send_keys(Keys.RETURN)
 # =============================================================================
+current_debug_links = []
 links_to_exclude = []
 links_to_exclude.append("google")
 links_to_exclude.append("register")
@@ -35,12 +36,13 @@ class Page:
         print("Pages links count:")
         print(len(self.links))
         
+        
             
     def trim_links(self):
-        
         temp_links = []
         for link in self.links:
-            if Page.findKeywords(link,links_to_exclude) == False and len(link) > 0:
+            if Page.findKeywords(link,links_to_exclude) == False and len(link) > 0:                
+                print("AddedLink:" + link)
                 temp_links.append(link)
         #del self.links
         self.links = temp_links
@@ -73,11 +75,13 @@ class Diver:
         self.start()
         self.create_current_page()
         current_depth = 0
+        time.sleep(10)
+        
         while(current_depth<=self.depth):
             self.step()
             self.create_current_page()
-
             current_depth=current_depth + 1
+            time.sleep(2)
         self.close()
             
     def start(self):
