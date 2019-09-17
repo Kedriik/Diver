@@ -32,7 +32,7 @@ class Page:
         self.link  = link
         self.text = text
         self.score = 0
-        
+        self.sorted_links = {}
         print("Pages links count:")
         print(len(self.links))
         
@@ -42,10 +42,23 @@ class Page:
         temp_links = []
         for link in self.links:
             if Page.findKeywords(link,links_to_exclude) == False and len(link) > 0:                
-                print("AddedLink:" + link)
                 temp_links.append(link)
-        #del self.links
+        
         self.links = temp_links
+    
+    def sort_links(self):
+        options = webdriver.FirefoxOptions()
+        options.add_argument('-headless')
+        driver = webdriver.Firefox(firefox_options=options)
+        for link in self.links:
+            print("scoring link:"+link)
+            driver.get(link)
+            score = len(driver.find_elements_by_xpath("//a[@href]"))
+            print("score:"+str(score))
+            self.sorted_links[link] = score
+        driver.close()            
+        self.sorted_links = sorted(self.sorted_links)
+        
         
     def findKeywords(link,keywords):
         for i in range(len(keywords)):
@@ -73,9 +86,10 @@ class Diver:
     
     def start_diving(self):
         self.start()
+        time.sleep(4)
         self.create_current_page()
         current_depth = 0
-        time.sleep(10)
+        
         
         while(current_depth<=self.depth):
             self.step()
@@ -93,13 +107,6 @@ class Diver:
     def step(self):
         current_window = self.driver.current_window_handle   
         self.driver.get(self.get_link())
-        score = 0
-        score = len(self.driver.find_elements_by_xpath("//img")) - 13
-        
-        if score < 0:
-            self.driver.switch_to_window(current_window)
-        
-        #self.driver.get()
         
     def peek(self):
         current_window = self.driver.current_window_handle        
@@ -113,18 +120,28 @@ class Diver:
         #peek_data = 
         
         
+    
     def get_link(self):
         #url = self.visited_pages[len(sel)]
         #print(self.visited_pages[len(self.visited_pages)-1].links[0])
-        index = -1
-        if(self.visited_pages[len(self.visited_pages)-1].links != 0):
-            index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
-        else:
-            self.visited_pages[len(self.visited_pages)-1].links.append(self.visited_pages[len(self.visited_pages)-2].link)
-            index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
-        print("random index:"+str(index))
-        print("random link:" + self.visited_pages[len(self.visited_pages)-1].links[index])
-        return self.visited_pages[len(self.visited_pages)-1].links[index]
+# =============================================================================
+#         index = -1
+#         if(self.visited_pages[len(self.visited_pages)-1].links != 0):
+#             index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
+#         else:
+#             self.visited_pages[len(self.visited_pages)-1].links.append(self.visited_pages[len(self.visited_pages)-2].link)
+#             index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
+#         print("random index:"+str(index))
+# =============================================================================
+        
+        
+        link_scores = []
+        
+        self.visited_pages
+            
+        
+            
+        return self.visited_pages[len(self.visited_pages)-1].sorted_links[0]
         
     def close(self):
         self.driver.close()
@@ -144,9 +161,18 @@ class Diver:
         self.clickable_elements = self.driver.find_elements_by_xpath("//a[@href]")
         links = []
         for element in self.clickable_elements:
-            links.append(element.get_attribute("href"))
+            link =""
+            try:
+                link = element.get_attribute("href")
+            except:
+                print("Exception1")
+            else:
+                links.append(link)
+                
+                
         page = Page(links, self.driver.current_url, currentText)
-        
+        page.trim_links()
+        page.sort_links()
         
         
         self.visited_pages.append(page);
