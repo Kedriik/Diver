@@ -21,7 +21,10 @@ import random
 # time.sleep(1);
 # elem.send_keys(Keys.RETURN)
 # =============================================================================
-
+links_to_exclude = []
+links_to_exclude.append("google")
+links_to_exclude.append("register")
+links_to_exclude.append("login")
 class Page:
     def __init__(self, links, link, text):
         self.links = links
@@ -34,15 +37,22 @@ class Page:
         
             
     def trim_links(self):
-        exclude = "google"
+        
         temp_links = []
         for link in self.links:
-            if link.find(exclude) == -1 and len(link) > 0:
-                temp_links.append(link);
+            if Page.findKeywords(link,links_to_exclude) == False and len(link) > 0:
+                temp_links.append(link)
         #del self.links
         self.links = temp_links
         
-
+    def findKeywords(link,keywords):
+        for i in range(len(keywords)):
+            if link.find(keywords[i]) != -1:
+                return True
+        return False
+            
+            
+            
             
         
 class Diver:
