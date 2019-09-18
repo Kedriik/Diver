@@ -2,31 +2,20 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 import random
+from numpy.random import choice
 import tldextract
-
-# =============================================================================
-# http://www.google.com/search?
-#   start=0
-#   &num=10
-#   &q=red+sox
-#   &cr=countryCA
-#   &lr=lang_fr
-#   &client=google-csbe
-#   &output=xml_no_dtd
-#   &cx=00255077836266642015:u-scht7a-8i
-# =============================================================================
-# =============================================================================
-# driver.get("http://www.google.com")
-# elem  = driver.find_element_by_name('q')
-# elem.send_keys(starting_key)
-# time.sleep(1);
-# elem.send_keys(Keys.RETURN)
-# =============================================================================
+import numpy as np
+import cv2
+g_window_shower = webdriver.Firefox()
 current_debug_links = []
+debug_random_images = []
 links_to_exclude = []
 links_to_exclude.append("google")
 links_to_exclude.append("register")
 links_to_exclude.append("login")
+g_is_diver_diving = False
+g_max_imshow = 3
+g_max_link_to_score = 5
 class Page:
     def __init__(self, links, link, text):
         self.links = links
@@ -35,30 +24,52 @@ class Page:
         self.score = 0
         self.sorted_links = {}
         self.domain = ""
-        print("Pages links count:")
-        print(len(self.links))
-        
-        
-            
+                    
     def trim_links(self):
         temp_links = []
         for link in self.links:
             if Page.findKeywords(link,links_to_exclude) == False and len(link) > 0:                
                 temp_links.append(link)
-        
         self.links = temp_links
-
         
-    
     def sort_links(self):
         options = webdriver.FirefoxOptions()
         options.add_argument('-headless')
         driver = webdriver.Firefox(firefox_options=options)
-        for link in self.links:
-            print("scoring link:"+link)
+        
+        for j,link in enumerate(self.links):
             driver.get(link)
             score = len(driver.find_elements_by_xpath("//a[@href]"))
-            print("score:"+str(score))
+            img_score = len(driver.find_elements_by_xpath("//img[@alt]"))
+            score = score*img_score
+            if(img_score == 0):
+                break
+            print("images with alt for:" + driver.current_url + " is " + str(img_score))
+            #element.get_attribute("href")
+            elements = driver.find_elements_by_xpath("//img[@alt]")
+            counter = 0
+            for i,elem in enumerate(elements):
+                alt_text = elem.get_attribute("alt")
+                src = elem.get_attribute("src")
+                try:
+                    if(len(src+alt_text) > 0):
+                        g_window_shower.get(src)
+                        print("alt text:" + alt_text)
+                except:
+                    break
+                if i > g_max_imshow:
+                    break
+            if j > g_max_link_to_score:
+                break
+                    
+# =============================================================================
+#                 if(len(alt_text)>0):
+#                     print("alt_text:" + alt_text)
+#                     print("src:" + src)
+# =============================================================================
+                
+                
+            
             self.sorted_links[link] = score
         driver.close()            
         self.sorted_links = sorted(self.sorted_links)
@@ -76,6 +87,7 @@ class Page:
 
             
 class Link:
+    
     def __init__(self, url, visited):
         self.url = url
         self.visited  = visited          
@@ -89,6 +101,7 @@ class Diver:
         self.visited_pages = []    
         self.depth = 10
         self.clickable_elements = []
+        self.is_diving = False
         
     def page_has_loaded(self):
         print("Checking if {} page is loaded.".format(self.driver.current_url))
@@ -97,17 +110,17 @@ class Diver:
         return page_state
     
     def start_diving(self):
+        self.is_diving = True
+        g_is_diver_diving = True
         self.start()
         time.sleep(4)
         self.create_current_page()
         current_depth = 0
-        
-        
-        while(current_depth<=self.depth):
+        while(self.is_diving and g_is_diver_diving):
             self.step()
             self.create_current_page()
-            current_depth=current_depth + 1
             time.sleep(2)
+        
         self.close()
             
     def start(self):
@@ -115,45 +128,27 @@ class Diver:
         elem  = self.driver.find_element_by_name('q')
         elem.send_keys(self.starting_key)
         elem.send_keys(Keys.RETURN)
-    
+        
+        
     def step(self):
-        current_window = self.driver.current_window_handle   
         self.driver.get(self.get_link())
         
     def peek(self):
         current_window = self.driver.current_window_handle        
         self.clickable_elements[0].click()
         self.driver.switch_to_window(current_window)
-        #(IWebElement) self.clickable_elements[0].
-        
-        
-        
-       # self.driver.switch_to_window(self, new WindowHandle(link))
-        #peek_data = 
-        
-        
     
-    def get_link(self):
-        #url = self.visited_pages[len(sel)]
-        #print(self.visited_pages[len(self.visited_pages)-1].links[0])
-# =============================================================================
-#         index = -1
-#         if(self.visited_pages[len(self.visited_pages)-1].links != 0):
-#             index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
-#         else:
-#             self.visited_pages[len(self.visited_pages)-1].links.append(self.visited_pages[len(self.visited_pages)-2].link)
-#             index = int(random.random()*1000000)%len(self.visited_pages[len(self.visited_pages)-1].links)
-#         print("random index:"+str(index))
-# =============================================================================
-        
-        
-        link_scores = []
-        
+    def get_link(self):   
         self.visited_pages
+        selected_link = ""
+        try:
+            #selected_link = self.visited_pages[len(self.visited_pages)-1].sorted_links[0]
+            selected_link=choice(self.visited_pages[len(self.visited_pages)-1].sorted_links)
+            print("Random choice is :"+selected_link)
+        except:
+            g_is_diver_diving = False
             
-        
-            
-        return self.visited_pages[len(self.visited_pages)-1].sorted_links[0]
+        return selected_link
         
     def close(self):
         self.driver.close()
