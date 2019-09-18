@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 import random
+import tldextract
 
 # =============================================================================
 # http://www.google.com/search?
@@ -33,6 +34,7 @@ class Page:
         self.text = text
         self.score = 0
         self.sorted_links = {}
+        self.domain = ""
         print("Pages links count:")
         print(len(self.links))
         
@@ -45,6 +47,8 @@ class Page:
                 temp_links.append(link)
         
         self.links = temp_links
+
+        
     
     def sort_links(self):
         options = webdriver.FirefoxOptions()
@@ -65,6 +69,11 @@ class Page:
             if link.find(keywords[i]) != -1:
                 return True
         return False
+    
+    def set_domain(self):
+        ext = tldextract.extract(self.link)
+        self.domain = ext.domain
+
             
 class Link:
     def __init__(self, url, visited):
@@ -176,6 +185,7 @@ class Diver:
         page = Page(links, self.driver.current_url, currentText)
         page.trim_links()
         page.sort_links()
+        page.set_domain()
         
         
         self.visited_pages.append(page);
