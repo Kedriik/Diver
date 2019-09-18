@@ -66,7 +66,10 @@ class Page:
                 return True
         return False
             
-            
+class Link:
+    def __init__(self, url, visited):
+        self.url = url
+        self.visited  = visited          
             
             
         
